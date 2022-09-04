@@ -11,10 +11,10 @@ int menuFrame(int menu, bool debug) {
     }   
 
     if (IsKeyReleased(KEY_ESCAPE)) {
-        if (menu == 0) {  }
-        if (menu == 1) {  }
-        if (menu == 2) {  }
+        if (menu == 0) { return 2; }
+        if (menu == 1) { return 3; }
+        if (menu == 2) { return 0; }
     }
-    
-    return 0;
+
+    return menu;
 }

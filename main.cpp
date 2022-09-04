@@ -1,17 +1,20 @@
 #include "raylib.h"
 #include "methods.hpp"
 #include <iostream>
+#include <string>
 
-int main(void)
-{
+int main(void){
+    std::cout << "Special thanks to albert";
     //init everything
     //window init ALWAYS first
-    InitWindow(960, 540, "Planning Nova");
+    int windowWidth  = 960;
+    int windowHeight = 540;
+    InitWindow(windowWidth, windowHeight, "Planning Nova");
 
     //varibles init down
     const bool debug = true;
     bool exitWindow = false;
-
+    int menuReturnInt;
     //FPS Varibles
     int maxFPS = 60;
     int oldFPS = 0;
@@ -23,11 +26,12 @@ int main(void)
     enum class f3Menu      { OFF = 0, F3 = 1, FPSCHART = 2, F3FPSCHART = 3 };
 
     //init misc.
+    Rectangle mainMenu = { 0.5 * windowWidth, 0.5 * windowHeight, .1 * windowWidth, .1 * windowHeight };
+    Rectangle quitGame = { 0.5 * windowWidth, 0.1 * windowHeight, .3 * windowWidth, .1 * windowHeight };
     f3Menu currentF3Mode;
-    currentMenu menu;
-    menu = currentMenu::Game;
+    currentMenu menu = currentMenu::Title;
     currentF3Mode = f3Menu::OFF;
-    Rectangle quitToMainMenuButton; quitToMainMenuButton.x = 380; quitToMainMenuButton.y = 230; quitToMainMenuButton.width = 200; quitToMainMenuButton.height = 60;
+    
     SetExitKey(KEY_PAUSE);
 
     //Camera Varibles
@@ -47,32 +51,44 @@ int main(void)
         if (!IsWindowFocused() && targetFPS != unfocusedFPS) { targetFPS = unfocusedFPS; SetTargetFPS(unfocusedFPS);                     }
         if (IsWindowFocused() && targetFPS != maxFPS       ) { targetFPS = maxFPS;       SetTargetFPS(maxFPS);                           }
         if (IsKeyPressed(KEY_PAUSE) || WindowShouldClose()) exitWindow = true;
-        if (IsKeyPressed(KEY_ESCAPE)) {
-            if (menu == currentMenu::Game)   { menu = currentMenu::Paused; std::cout << "Pause";    } else
-            if (menu == currentMenu::Title)  { exitWindow = true;          std::cout << "END GAME"; } else
-            if (menu == currentMenu::Paused) { menu = currentMenu::Game;   std::cout << "Resum";    }
+        
+        if (menu == currentMenu::Game)   { menuReturnInt = menuFrame(0, debug); }
+        if (menu == currentMenu::Title)  { menuReturnInt = menuFrame(1, debug); }
+        if (menu == currentMenu::Paused) { menuReturnInt = menuFrame(2, debug); }
+        if (menuReturnInt == 0) { menu = currentMenu::Game; }
+        if (menuReturnInt == 2) { menu = currentMenu::Paused; }
+        if (menuReturnInt == 3) { exitWindow = true; }
+
+        if (menu == currentMenu::Game) {
+            //render game GUI
+            SetMousePosition(GetWindowPosition().x, GetWindowPosition().y);
+            DisableCursor();
         }
-        if (menu == currentMenu::Game)   { menuFrame(0, debug); }
-        if (menu == currentMenu::Title)  { menuFrame(1, debug); }
-        if (menu == currentMenu::Paused) { menuFrame(2, debug); }
-        
-        BeginDrawing();
-        ClearBackground(BLACK);
-        if (currentF3Mode == f3Menu::F3 || currentF3Mode == f3Menu::FPSCHART || currentF3Mode == f3Menu::F3FPSCHART || debug) { DrawFPS(10, 10); }
-        
-        //draw stuff in 2d 
+
+        if (menu == currentMenu::Title) {
+            //render title menu
+            DrawRectangleRec(quitGame, PINK);
+            if (CheckCollisionPointRec(GetMousePosition(), quitGame) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
+                exitWindow = true;
+            }
+            EnableCursor();
+            ShowCursor();
+        }
+
         if (menu == currentMenu::Paused) {
             //render paused menu
             EnableCursor();
             ShowCursor();
-            DrawRectangle(quitToMainMenuButton.x, quitToMainMenuButton.y, quitToMainMenuButton.width, quitToMainMenuButton.height, RED);
-            if (CheckCollisionPointRec(GetMousePosition(), quitToMainMenuButton) && IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+            DrawRectangleRec(mainMenu, GRAY);
+            if (CheckCollisionPointRec(GetMousePosition(), mainMenu) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
                 menu = currentMenu::Title;
             }
-        } else {
-            DisableCursor();
         }
+        BeginDrawing();
+        ClearBackground(BLACK);
+        if (currentF3Mode == f3Menu::F3 || currentF3Mode == f3Menu::FPSCHART || currentF3Mode == f3Menu::F3FPSCHART || debug) { DrawFPS(10, 10); }
 
+        //draw stuff in 2d 
 
         BeginMode3D(camera);
         DrawGrid(100, 1.0f);
